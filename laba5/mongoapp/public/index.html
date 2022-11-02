@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+
+  <meta name="viewport" content="width=device-width" />
+
+  <title>Список планет</title>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous" />
+
+  <style>
+    body {
+      background: rgb(246, 248, 212);
+    }
+
+    table {
+      border: 2px solid black;
+    }
+
+    .planetForm {
+      display: flex;
+      padding: 20px 20px 20px 20px;
+      flex-direction: column;
+      align-items: center;
+    }
+  </style>
+</head>
+
+<body>
+  <form name="planetForm" class="planetForm">
+    <h2 style="display: ''">Список планет</h2>
+    <input type="hidden" name="id" value="0" />
+    <div class="form-group">
+      <label for="name_system">Назва зоряної системи:</label>
+      <input class="form-control" name="name_system" />
+    </div>
+
+    <div class="form-group">
+      <label for="count_planet">Кількість планет:</label>
+      <input class="form-control" name="count_planet" />
+    </div>
+
+    <div class="form-group">
+      <label for="name_planet">Ім'я планети:</label>
+      <input class="form-control" name="name_planet" />
+    </div>
+
+    <div class="form-group">
+      <label for="order_planet">Номер планети:</label>
+      <input class="form-control" name="order_planet" />
+    </div>
+
+    <div class="form-group">
+      <label for="size_planet">Розмір планети:</label>
+      <input class="form-control" name="size_planet" />
+    </div>
+
+    <div class="panel-body">
+      <button type="submit" class="btn btn-sm btn-primary">Зберегти</button>
+      <a id="reset" class="btn btn-sm btn-primary">Скинути</a>
+    </div>
+    <table class="table table-condensed table-striped table-bordered">
+      <thead>
+        <tr>
+          <th>Id</th>
+          <th>Назва зоряної системи</th>
+          <th>Кількість планет</th>
+          <th>Ім'я планети</th>
+          <th>Номер планети</th>
+          <th>Розмір планети</th>
+        </tr>
+      </thead>
+
+      <tbody class="tbody"></tbody>
+    </table>
+  </form>
+
+  <script>
+    const clickSwitchBtn = document.querySelector(".switchButton");
+
+    async function GetPlanets() {
+
+      const response = await fetch("/api/planets", {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      if (response.ok === true) {
+        const planets = await response.json();
+        let rows = document.querySelector(".tbody");
+        planets.forEach((planet) => {
+          rows.append(row(planet));
+        });
+      }
+    }
+
+    async function GetPlanet(id) {
+      const response = await fetch("/api/planets/" + id, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+      });
+      if (response.ok === true) {
+        const planet = await response.json();
+        const form = document.forms["planetForm"];
+        form.elements["id"].value = planet._id;
+        form.elements["name_system"].value = planet.name_system;
+        form.elements["count_planet"].value = planet.count_planet;
+        form.elements["name_planet"].value = planet.name_planet;
+        form.elements["order_planet"].value = planet.order_planet;
+        form.elements["size_planet"].value = planet.size_planet;
+      }
+    }
+    async function CreatePlanet(name_system, count_planet, name_planet, order_planet, size_planet) {
+      const response = await fetch("api/planets", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name_system: name_system,
+          count_planet: parseInt(count_planet, 10),
+          name_planet: name_planet,
+          order_planet: parseInt(order_planet, 10),
+          size_planet: parseInt(size_planet, 10)
+        }),
+      });
+      if (response.ok === true) {
+        const planet = await response.json();
+        reset();
+        document.querySelector(".tbody").append(row(planet));
+      }
+    }
+    async function EditPlanet(planetId, name_system, count_planet, name_planet, order_planet, size_planet) {
+      const response = await fetch("api/planets", {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: planetId,
+          name_system: name_system,
+          count_planet: parseInt(count_planet, 10),
+          name_planet: name_planet,
+          order_planet: parseInt(order_planet, 10),
+          size_planet: parseInt(size_planet, 10)
+        }),
+      });
+      if (response.ok === true) {
+        const planet = await response.json();
+        reset();
+        document
+          .querySelector("tr[data-rowid='" + planet._id + "']")
+          .replaceWith(row(planet));
+      }
+    }
+    async function DeletePlanet(id) {
+      const response = await fetch("/api/planets/" + id, {
+        method: "DELETE",
+        headers: { Accept: "application/json" },
+      });
+      if (response.ok === true) {
+        const planet = await response.json();
+        document.querySelector("tr[data-rowid='" + planet._id + "']").remove();
+      }
+    }
+    function reset() {
+      const form = document.forms["planetForm"];
+      form.reset();
+      form.elements["id"].value = 0;
+    }
+    function row(planet) {
+      console.log(planet);
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-rowid", planet._id);
+      const idTd = document.createElement("td");
+      idTd.append(planet._id);
+      tr.append(idTd);
+      const name_systemTd = document.createElement("td");
+      name_systemTd.append(planet.name_system);
+      tr.append(name_systemTd);
+      const count_planetTd = document.createElement("td");
+      count_planetTd.append(planet.count_planet);
+      tr.append(count_planetTd);
+      const name_planetTd = document.createElement("td");
+      name_planetTd.append(planet.name_planet);
+      tr.append(name_planetTd);
+      const order_planetTd = document.createElement("td");
+      order_planetTd.append(planet.order_planet);
+      tr.append(order_planetTd);
+      const size_planet = document.createElement("td");
+      size_planet.append(planet.size_planet);
+      tr.append(size_planet);
+      const linksTd = document.createElement("td");
+      const editLink = document.createElement("a");
+      editLink.setAttribute("data-id", planet._id);
+      editLink.setAttribute("style", "cursor:pointer;padding:15px;");
+      editLink.append("Змінити");
+      editLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        GetPlanet(planet._id);
+      });
+      linksTd.append(editLink);
+      const removeLink = document.createElement("a");
+      removeLink.setAttribute("data-id", planet._id);
+      removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
+      removeLink.append("Видалити");
+      removeLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        DeletePlanet(planet._id);
+      });
+      linksTd.append(removeLink);
+      tr.appendChild(linksTd);
+      return tr;
+    }
+    document.getElementById("reset").click(function (e) {
+      e.preventDefault();
+      reset();
+    });
+    document.forms["planetForm"].addEventListener("submit", (e) => {
+      e.preventDefault();
+      const form = document.forms["planetForm"];
+      const id = form.elements["id"].value;
+      const name_system = form.elements["name_system"].value;
+      const count_planet = form.elements["count_planet"].value;
+      const name_planet = form.elements["name_planet"].value;
+      const order_planet = form.elements["order_planet"].value;
+      const size_planet = form.elements["size_planet"].value;
+
+      if (id == 0) CreatePlanet(name_system, count_planet, name_planet, order_planet, size_planet);
+      else EditPlanet(id, name_system, count_planet, name_planet, order_planet, size_planet);
+    });
+    GetPlanets();
+  </script>
+</body>
+
+</html>
