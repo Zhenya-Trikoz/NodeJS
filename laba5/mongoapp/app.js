@@ -10,9 +10,9 @@ const {
         MONGO_DB
 } = process.env
 
-// const url = `mongodb://${MONGO_DB_HOSTNAME}:${MONGO_DB_PORT}/${MONGO_DB}`;
+const url = `mongodb://${MONGO_DB_HOSTNAME}:${MONGO_DB_PORT}/${MONGO_DB}`;
 
-const url = "mongodb://172.31.0.1:27017/PlanetSite";
+// const url = "mongodb://172.31.0.1:27017/PlanetSite";
 
 const planetScheme = new Schema({
         name_system: String,
